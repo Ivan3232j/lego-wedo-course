@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мини-игры для джойстика — LEGO WeDo 2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E3000B; --yellow: #FFD700; --blue: #006CB7; --green: #00A650;
+    --orange: #FF6B00; --navy: #0E1E38; --navy2: #1A365D;
+    --bg: #F4F6FB; --card: #FFFFFF; --text: #1C2536; --muted: #616E85;
+    --shadow: 0 8px 24px rgba(0, 30, 80, 0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text);
+    -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* ── Верхняя панель ── */
+  .topbar {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+    color: #fff; padding: 14px 16px; position: sticky; top: 0; z-index: 20;
+    box-shadow: 0 4px 16px rgba(14,30,56,0.3);
+  }
+  .topbar-inner {
+    max-width: 1200px; margin: 0 auto; display: flex; align-items: center;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .back-link {
+    color: #CBD5E1; text-decoration: none; font-weight: 800; font-size: 14px;
+    padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.08);
+  }
+  .back-link:hover { background: rgba(255,255,255,0.16); color: #fff; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+  .logo {
+    background: var(--red); font-family: 'Baloo 2', sans-serif; font-weight: 800;
+    font-size: 20px; padding: 2px 10px; border-radius: 7px;
+  }
+  .brand h1 { font-family: 'Baloo 2', sans-serif; font-size: 22px; line-height: 1.1; }
+
+  .conn { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .conn-status {
+    display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700;
+    color: #CBD5E1; background: rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 10px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #64748B; flex: none; }
+  .dot.on { background: #22C55E; box-shadow: 0 0 8px #22C55E; }
+  .dot.wait { background: var(--yellow); }
+  .btn {
+    border: none; border-radius: 12px; padding: 10px 16px; font-weight: 800; font-size: 14px;
+    color: #fff; background: var(--blue); box-shadow: 0 4px 12px rgba(0,108,183,0.35);
+    transition: transform .15s, filter .15s;
+  }
+  .btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+  .btn.ghost { background: rgba(255,255,255,0.12); box-shadow: none; }
+  .btn.green { background: var(--green); box-shadow: 0 4px 12px rgba(0,166,80,0.35); }
+  .btn.red { background: var(--red); box-shadow: 0 4px 12px rgba(227,0,11,0.3); }
+  .btn:disabled { opacity: .5; cursor: default; transform: none; }
+
+  /* ── Настройки джойстика ── */
+  .settings {
+    display: none; max-width: 1200px; margin: 12px auto 0; background: rgba(255,255,255,0.06);
+    border-radius: 14px; padding: 14px; gap: 18px; align-items: center; flex-wrap: wrap;
+  }
+  .settings.open { display: flex; }
+  .tilt-view {
+    width: 96px; height: 96px; border-radius: 50%; background: rgba(255,255,255,0.1);
+    position: relative; flex: none; border: 2px solid rgba(255,255,255,0.2);
+  }
+  .tilt-view::before, .tilt-view::after {
+    content: ''; position: absolute; background: rgba(255,255,255,0.15);
+  }
+  .tilt-view::before { left: 50%; top: 8px; bottom: 8px; width: 2px; margin-left: -1px; }
+  .tilt-view::after { top: 50%; left: 8px; right: 8px; height: 2px; margin-top: -1px; }
+  .tilt-dot {
+    position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--yellow);
+    left: 50%; top: 50%; margin: -9px 0 0 -9px; box-shadow: 0 0 10px rgba(255,215,0,0.7); z-index: 1;
+  }
+  .settings-col { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #E2E8F0; }
+  .settings-col label { display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; }
+  .settings-col input { width: 18px; height: 18px; accent-color: var(--yellow); }
+  .raw { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #94A3B8; }
+  .hint { font-size: 13px; color: #94A3B8; max-width: 380px; line-height: 1.4; }
+
+  /* ── Меню игр ── */
+  main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 60px; }
+  .intro { margin-bottom: 20px; }
+  .intro h2 { font-family: 'Baloo 2', sans-serif; font-size: 28px; }
+  .intro p { color: var(--muted); font-size: 16px; max-width: 760px; line-height: 1.5; }
+  .games-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px;
+  }
+  .game-card {
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden;
+    cursor: pointer; transition: transform .2s, box-shadow .2s; border: none; text-align: left;
+    display: flex; flex-direction: column; color: inherit; font: inherit;
+  }
+  .game-card:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(0,30,80,0.15); }
+  .game-card .art {
+    height: 120px; display: flex; align-items: center; justify-content: center; font-size: 64px;
+    position: relative;
+  }
+  .game-card .art::after {
+    content: ''; position: absolute; inset: 0; opacity: .12;
+    background-image: radial-gradient(#fff 3px, transparent 3px); background-size: 22px 22px;
+  }
+  .game-card .body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .game-card h3 { font-family: 'Baloo 2', sans-serif; font-size: 21px; line-height: 1.1; }
+  .game-card p { color: var(--muted); font-size: 14px; line-height: 1.45; flex: 1; }
+  .game-card .best { font-size: 13px; font-weight: 800; color: var(--orange); }
+
+  .howto {
+    margin-top: 28px; background: var(--card); border-radius: 20px; padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .howto h3 { font-family: 'Baloo 2', sans-serif; font-size: 20px; margin-bottom: 8px; }
+  .howto ol { padding-left: 20px; color: var(--text); line-height: 1.6; font-size: 15px; }
+  .howto .note {
+    margin-top: 12px; background: #EFF6FF; border-left: 4px solid var(--blue); padding: 10px 14px;
+    border-radius: 0 10px 10px 0; font-size: 14px; color: #1E3A8A; line-height: 1.45;
+  }
+
+  /* ── Экран игры ── */
+  .play { display: none; }
+  .play.active { display: block; }
+  .menu.hidden { display: none; }
+  .play-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .play-head h2 { font-family: 'Baloo 2', sans-serif; font-size: 26px; margin-right: auto; }
+  .btn.light { background: #fff; color: var(--text); box-shadow: var(--shadow); }
+  .stage-wrap { display: grid; grid-template-columns: 1fr 240px; gap: 18px; align-items: start; }
+  .stage {
+    background: var(--navy); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow);
+    position: relative; aspect-ratio: 8 / 5;
+  }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  .side { display: flex; flex-direction: column; gap: 14px; }
+  .side-card { background: var(--card); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); }
+  .side-card h4 { font-size: 15px; font-weight: 900; margin-bottom: 8px; }
+  .side-card ul { padding-left: 18px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+  .stick-base {
+    width: 150px; height: 150px; border-radius: 50%; margin: 4px auto 0;
+    background: radial-gradient(circle, #E2E8F0 0%, #CBD5E1 100%); position: relative;
+    touch-action: none; user-select: none; box-shadow: inset 0 4px 10px rgba(0,0,0,0.15);
+  }
+  .stick-knob {
+    position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px;
+    border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FF4D55, var(--red));
+    box-shadow: 0 6px 14px rgba(227,0,11,0.4); pointer-events: none;
+  }
+  .stick-label { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  @media (max-width: 860px) {
+    .stage-wrap { grid-template-columns: 1fr; }
+    .side { flex-direction: row; flex-wrap: wrap; }
+    .side-card { flex: 1 1 220px; }
+    .brand h1 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="back-link" href="../index.html">← К урокам</a>
+    <div class="brand">
+      <span class="logo">WeDo</span>
+      <h1>🕹️ Игры для джойстика</h1>
+    </div>
+    <div class="conn">
+      <div class="conn-status"><span class="dot" id="connDot"></span><span id="connText">Смартхаб не подключён</span></div>
+      <button class="btn" id="connectBtn">🔵 Подключить WeDo</button>
+      <button class="btn ghost" id="settingsBtn" title="Настройка джойстика">⚙️</button>
+    </div>
+  </div>
+  <div class="settings" id="settings">
+    <div class="tilt-view"><div class="tilt-dot" id="tiltDot"></div></div>
+    <div class="settings-col">
+      <button class="btn green" id="calibrateBtn">⚖️ Сейчас ровно</button>
+      <div class="raw" id="rawText">датчик: —</div>
+    </div>
+    <div class="settings-col">
+      <label><input type="checkbox" id="optSwap"> Поменять оси местами</label>
+      <label><input type="checkbox" id="optInvX"> Перевернуть влево ↔ вправо</label>
+      <label><input type="checkbox" id="optInvY"> Перевернуть вперёд ↕ назад</label>
+    </div>
+    <div class="hint">
+      Наклони джойстик и смотри на жёлтую точку. Наклон вперёд должен вести точку вверх,
+      вправо — вправо. Если точка убегает не туда — поставь галочки. Держи джойстик ровно и нажми «Сейчас ровно».
+    </div>
+  </div>
+</div>
+
+<main>
+  <section class="menu" id="menu">
+    <div class="intro">
+      <h2>Выбери игру</h2>
+      <p>Собери джойстик из урока №4, подключи смартхаб — и управляй играми наклоном руки.
+        Нет смартхаба? Играй стрелками на клавиатуре или экранным стиком.</p>
+    </div>
+    <div class="games-grid" id="gamesGrid"></div>
+
+    <div class="howto">
+      <h3>🔌 Как подключить джойстик</h3>
+      <ol>
+        <li>Собери модель «Джойстик» и вставь датчик наклона в любой порт смартхаба.</li>
+        <li>Закрой приложение WeDo 2.0 на всех устройствах — смартхаб может дружить только с одним.</li>
+        <li>Нажми «🔵 Подключить WeDo», затем зелёную кнопку на смартхабе. Выбери его в списке.</li>
+        <li>Огонёк смартхаба станет зелёным. Открой ⚙️ и проверь, что жёлтая точка двигается правильно.</li>
+      </ol>
+      <div class="note">
+        Bluetooth в браузере работает в <b>Google Chrome</b> или <b>Microsoft Edge</b> на компьютере и на Android.
+        На iPhone/iPad и в Safari подключить смартхаб не получится — там играйте с экранным стиком.
+      </div>
+    </div>
+  </section>
+
+  <section class="play" id="play">
+    <div class="play-head">
+      <button class="btn light" id="backBtn">← Все игры</button>
+      <h2 id="playTitle"></h2>
+      <button class="btn red" id="restartBtn">↻ Заново</button>
+    </div>
+    <div class="stage-wrap">
+      <div class="stage"><canvas id="canvas" width="800" height="500"></canvas></div>
+      <div class="side">
+        <div class="side-card">
+          <h4>Как играть</h4>
+          <ul id="playHowto"></ul>
+        </div>
+        <div class="side-card">
+          <h4>Экранный стик</h4>
+          <div class="stick-base" id="stickBase"><div class="stick-knob" id="stickKnob"></div></div>
+          <div class="stick-label">или стрелки ← ↑ → ↓ на клавиатуре</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="joystick.js"></script>
+<script src="engine.js"></script>
+<script src="game-race.js"></script>
+<script src="game-crane.js"></script>
+<script src="game-shooting.js"></script>
+<script src="game-maze.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
