@@ -121,6 +121,29 @@
     box-shadow: 0 4px 12px rgba(227,0,11,0.3);
   }
 
+  .header-prog-btn {
+    background: linear-gradient(135deg, var(--blue) 0%, #004B80 100%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 14px rgba(0, 108, 183, 0.4);
+    transition: all 0.2s;
+  }
+
+  .header-prog-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 108, 183, 0.6);
+    filter: brightness(1.15);
+    color: #fff;
+  }
+
   /* ── CONTROLS / FILTERS ── */
   .controls-wrapper {
     max-width: 1200px;
@@ -566,6 +589,28 @@
     box-shadow: 0 6px 20px rgba(0, 166, 80, 0.45);
   }
 
+  .btn-prog-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--blue) 0%, #004B80 100%);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 14px;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 15px;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(0, 108, 183, 0.35);
+    transition: all 0.2s;
+  }
+
+  .btn-prog-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 108, 183, 0.5);
+    filter: brightness(1.1);
+  }
+
   /* MODAL TABS */
   .modal-tabs {
     display: flex;
@@ -720,7 +765,8 @@
     <div class="header-badges">
       <div class="badge-chip">🤖 36 базовых уроков</div>
       <div class="badge-chip pro">⭐ 6 PRO-проектов</div>
-      <div class="badge-chip">⚙️ Базовый набор 45300</div>
+      <a href="programming/index.html" class="header-prog-btn">💻 Программирование</a>
+      <a href="games/index.html" class="badge-chip" style="text-decoration:none; color:#fff;">🕹️ Игры</a>
     </div>
   </div>
 </header>
@@ -893,11 +939,30 @@ function openModal(lesson) {
       </a>
     `;
   }
+
+  const hasMotor = (lesson.tags && lesson.tags.includes('Мотор')) || /мотор|двигател|ход|вращен|скорост|колес|вентилятор/i.test(lesson.prog + ' ' + (lesson.tags || []).join(' '));
+  if (hasMotor || lesson.prog) {
+    ctaHtml += `
+      <a href="programming/index.html#lesson-${lesson.num}" target="_blank" class="btn-prog-action">
+        <span style="font-size:18px">💻</span>
+        <span>Запрограммировать модель</span>
+      </a>
+    `;
+  }
+
   if (!lesson.pdf && !lesson.fast_track?.pro_pdf) {
     ctaHtml = `
       <div style="background:#FEF3C7; color:#92400E; padding:12px 16px; border-radius:12px; font-weight:700; font-size:14px">
         💡 Авторский творческий проект: модель создается по собственному чертежу и эскизу!
       </div>
+      ${(hasMotor || lesson.prog) ? `
+        <div style="margin-top:10px;">
+          <a href="programming/index.html#lesson-${lesson.num}" target="_blank" class="btn-prog-action">
+            <span style="font-size:18px">💻</span>
+            <span>Запрограммировать модель</span>
+          </a>
+        </div>
+      ` : ''}
     `;
   }
   ctaBox.innerHTML = ctaHtml;
@@ -905,7 +970,17 @@ function openModal(lesson) {
   // Lists
   document.getElementById('modalTheoryList').innerHTML = lesson.theory.map(t => `<li>${t}</li>`).join('');
   document.getElementById('modalBuildList').innerHTML = lesson.build_tips.map(b => `<li>${b}</li>`).join('');
-  document.getElementById('modalProgText').textContent = lesson.prog;
+  document.getElementById('modalProgText').innerHTML = `
+    <div>${lesson.prog}</div>
+    ${(hasMotor || lesson.prog) ? `
+      <div style="margin-top:16px;">
+        <a href="programming/index.html#lesson-${lesson.num}" target="_blank" class="btn-prog-action">
+          <span style="font-size:18px">💻</span>
+          <span>Запрограммировать модель в редакторе WeDo 2.0</span>
+        </a>
+      </div>
+    ` : ''}
+  `;
   document.getElementById('modalExpList').innerHTML = lesson.exp.map(e => `<li>${e}</li>`).join('');
 
   // Fast track tab content

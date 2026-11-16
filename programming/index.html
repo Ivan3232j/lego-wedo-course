@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Программирование LEGO WeDo 2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+
+<!-- Google Blockly 10.4.3 -->
+<script src="https://cdn.jsdelivr.net/npm/blockly@10.4.3/blockly_compressed.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/blockly@10.4.3/blocks_compressed.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/blockly@10.4.3/javascript_compressed.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/blockly@10.4.3/msg/ru.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ВЕРХНЯЯ ШАПКА -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="back-link" href="../index.html">← К урокам</a>
+    <div class="brand">
+      <span class="logo-lego">LEGO</span>
+      <h1>💻 Программирование WeDo 2.0</h1>
+    </div>
+    <div class="topbar-actions">
+      <div class="conn-status">
+        <span class="status-dot" id="headerConnDot"></span>
+        <span id="headerConnText">Смартхаб не подключён (симулятор)</span>
+        <span class="hub-led-preview" id="headerLedPreview" title="Цвет светодиода смартхаба"></span>
+      </div>
+      <button class="btn" id="headerConnectBtn">🔵 Подключить WeDo</button>
+    </div>
+  </div>
+</header>
+
+<!-- НАВИГАЦИЯ ПО ВКЛАДКАМ -->
+<div class="nav-tabs-wrapper">
+  <div class="nav-tabs">
+    <button class="tab-btn active" data-tab="tab-motors">🔌 Подключение и мотор</button>
+    <button class="tab-btn" data-tab="tab-remote">🎮 Пульт</button>
+    <button class="tab-btn" data-tab="tab-blocks">🧩 Программа</button>
+  </div>
+</div>
+
+<main>
+  <!-- ======================================================== -->
+  <!-- ВКЛАДКА 1: ПОДКЛЮЧЕНИЕ И МОТОР                           -->
+  <!-- ======================================================== -->
+  <section class="page-tab active" id="tab-motors">
+    <!-- Герой-карточка смартхаба -->
+    <div class="hub-hero-card">
+      <div class="hub-hero-info">
+        <h2 id="hubHeroTitle">Смартхаб WeDo 2.0</h2>
+        <p id="hubHeroSubtitle">Для работы с мотором и датчиками подключи смартхаб по Bluetooth или управляй в симуляторе прямо на экране.</p>
+        <div class="ports-banner">
+          <div class="port-pill">
+            <span class="port-pill-badge">Порт A</span>
+            <span id="pillPortA">Мотор (симулятор)</span>
+          </div>
+          <div class="port-pill">
+            <span class="port-pill-badge">Порт B</span>
+            <span id="pillPortB">Датчик расстояния (симулятор)</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <button class="btn green" id="heroConnectBtn" style="font-size: 16px; padding: 14px 22px;">
+          🔵 Подключить смартхаб
+        </button>
+      </div>
+    </div>
+
+    <!-- Моторы A и B -->
+    <div class="card-title">⚙️ Управление моторами</div>
+    <div class="grid-2">
+      <!-- Мотор A -->
+      <div class="motor-card">
+        <div class="motor-header">
+          <h3>Мотор Порта A</h3>
+          <span class="motor-badge" id="badgeMotorA">Готов к работе</span>
+        </div>
+
+        <div class="motor-visual">
+          <svg class="gear-svg" id="gearSvgA" viewBox="0 0 100 100">
+            <path fill="#006CB7" d="M50 25 A25 25 0 1 0 50 75 A25 25 0 1 0 50 25 Z M50 38 A12 12 0 1 1 50 62 A12 12 0 1 1 50 38 Z" />
+            <!-- Зубья шестерёнки -->
+            <rect x="46" y="8" width="8" height="15" rx="3" fill="#006CB7" />
+            <rect x="46" y="77" width="8" height="15" rx="3" fill="#006CB7" />
+            <rect x="8" y="46" width="15" height="8" rx="3" fill="#006CB7" />
+            <rect x="77" y="46" width="15" height="8" rx="3" fill="#006CB7" />
+            <rect x="18" y="18" width="12" height="12" rx="3" fill="#006CB7" transform="rotate(45 24 24)" />
+            <rect x="70" y="70" width="12" height="12" rx="3" fill="#006CB7" transform="rotate(45 76 76)" />
+            <rect x="70" y="18" width="12" height="12" rx="3" fill="#006CB7" transform="rotate(-45 76 24)" />
+            <rect x="18" y="70" width="12" height="12" rx="3" fill="#006CB7" transform="rotate(-45 24 76)" />
+            <circle cx="50" cy="50" r="6" fill="#FFD700" />
+          </svg>
+          <div class="motor-visual-text" id="motorSpeedTextA">Стоп (мощность 0)</div>
+        </div>
+
+        <div class="power-slider-wrap">
+          <div class="power-slider-head">
+            <span>Мощность (сила вращения):</span>
+            <span class="power-val" id="powerLabelA">5</span>
+          </div>
+          <input type="range" class="slider-custom" id="sliderPowerA" min="1" max="10" value="5">
+        </div>
+
+        <div class="motor-btn-row">
+          <button class="btn light btn-motor-action" id="btnMotorALeft" title="Крутить влево против часовой стрелки">↺ Влево</button>
+          <button class="btn red btn-motor-action" id="btnMotorAStop" title="Остановить мотор">⏹ Стоп</button>
+          <button class="btn light btn-motor-action" id="btnMotorARight" title="Крутить вправо по часовой стрелке">↻ Вправо</button>
+        </div>
+
+        <label class="motor-invert-label">
+          <input type="checkbox" id="checkInvertA">
+          <span>Перевернуть направление (реверс)</span>
+        </label>
+      </div>
+
+      <!-- Мотор B -->
+      <div class="motor-card">
+        <div class="motor-header">
+          <h3>Мотор Порта B</h3>
+          <span class="motor-badge" id="badgeMotorB">Готов к работе</span>
+        </div>
+
+        <div class="motor-visual">
+          <svg class="gear-svg" id="gearSvgB" viewBox="0 0 100 100">
+            <path fill="#FF6B00" d="M50 25 A25 25 0 1 0 50 75 A25 25 0 1 0 50 25 Z M50 38 A12 12 0 1 1 50 62 A12 12 0 1 1 50 38 Z" />
+            <rect x="46" y="8" width="8" height="15" rx="3" fill="#FF6B00" />
+            <rect x="46" y="77" width="8" height="15" rx="3" fill="#FF6B00" />
+            <rect x="8" y="46" width="15" height="8" rx="3" fill="#FF6B00" />
+            <rect x="77" y="46" width="15" height="8" rx="3" fill="#FF6B00" />
+            <rect x="18" y="18" width="12" height="12" rx="3" fill="#FF6B00" transform="rotate(45 24 24)" />
+            <rect x="70" y="70" width="12" height="12" rx="3" fill="#FF6B00" transform="rotate(45 76 76)" />
+            <rect x="70" y="18" width="12" height="12" rx="3" fill="#FF6B00" transform="rotate(-45 76 24)" />
+            <rect x="18" y="70" width="12" height="12" rx="3" fill="#FF6B00" transform="rotate(-45 24 76)" />
+            <circle cx="50" cy="50" r="6" fill="#FFD700" />
+          </svg>
+          <div class="motor-visual-text" id="motorSpeedTextB">Стоп (мощность 0)</div>
+        </div>
+
+        <div class="power-slider-wrap">
+          <div class="power-slider-head">
+            <span>Мощность (сила вращения):</span>
+            <span class="power-val" id="powerLabelB">5</span>
+          </div>
+          <input type="range" class="slider-custom" id="sliderPowerB" min="1" max="10" value="5">
+        </div>
+
+        <div class="motor-btn-row">
+          <button class="btn light btn-motor-action" id="btnMotorBLeft">↺ Влево</button>
+          <button class="btn red btn-motor-action" id="btnMotorBStop">⏹ Стоп</button>
+          <button class="btn light btn-motor-action" id="btnMotorBRight">↻ Вправо</button>
+        </div>
+
+        <label class="motor-invert-label">
+          <input type="checkbox" id="checkInvertB">
+          <span>Перевернуть направление (реверс)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Датчики -->
+    <div class="card-title" style="margin-top: 24px;">📊 Живые значения датчиков</div>
+    <div class="grid-2">
+      <!-- Датчик наклона -->
+      <div class="sensor-card">
+        <div class="motor-header">
+          <h3>📐 Датчик наклона</h3>
+          <span class="motor-badge" id="badgeTiltStatus">Активен</span>
+        </div>
+        <div class="tilt-compass">
+          <div class="tilt-arrow-icon" id="tiltArrowIcon">⚖️</div>
+          <div class="tilt-state-badge" id="tiltStateBadge">Ровно</div>
+        </div>
+        <div class="sim-control-box">
+          <b>Симулятор наклона (проверь реакцию):</b>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="btn light btn-sim-tilt" data-dir="flat">⚖️ Ровно</button>
+            <button class="btn light btn-sim-tilt" data-dir="forward">⬆ Вперёд</button>
+            <button class="btn light btn-sim-tilt" data-dir="backward">⬇ Назад</button>
+            <button class="btn light btn-sim-tilt" data-dir="left">⬅ Влево</button>
+            <button class="btn light btn-sim-tilt" data-dir="right">➡ Вправо</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Датчик расстояния -->
+      <div class="sensor-card">
+        <div class="motor-header">
+          <h3>📏 Датчик расстояния (движения)</h3>
+          <span class="motor-badge" id="badgeDistanceStatus">Активен</span>
+        </div>
+        <div class="distance-track">
+          <div class="distance-bar" id="distanceProgressBar"></div>
+        </div>
+        <div class="distance-num-badge" id="distanceValBadge">Расстояние: 10 (Свободно)</div>
+        <div class="sim-control-box">
+          <b>Симулятор расстояния (подвигай ползунок):</b>
+          <input type="range" class="slider-custom" id="simDistanceSlider" min="0" max="10" value="10">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;">
+            <span>0 (вплотную)</span>
+            <span>5 (средне)</span>
+            <span>10 (далеко / свободно)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Подсказка для детей -->
+    <div class="card" style="margin-top: 24px; background: #FFFBEB; border-color: #FDE047;">
+      <h4 style="font-size: 16px; color: #854D0E; margin-bottom: 6px;">💡 Что нужно знать о моторе:</h4>
+      <p style="font-size: 14px; color: #713F12; line-height: 1.5;">
+        <b>Мощность</b> — это скорость и сила, с которой крутится вал мотора (1 — самый тихий ход, 10 — максимальная скорость).<br>
+        <b>↻ Вправо</b> — вращение по часовой стрелке, <b>↺ Влево</b> — против часовой стрелки.<br>
+        Если модель собрана зеркально — просто поставь галочку «Перевернуть направление»!
+      </p>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- ВКЛАДКА 2: ПУЛЬТ                                         -->
+  <!-- ======================================================== -->
+  <section class="page-tab" id="tab-remote">
+    <div class="card">
+      <div class="card-title">🎮 Готовые раскладки пульта</div>
+      <div class="remote-presets">
+        <button class="preset-btn active" data-preset="car">🚗 Машинка (2 мотора)</button>
+        <button class="preset-btn" data-preset="crane">🏗️ Кран (подъём + поворот)</button>
+        <button class="preset-btn" data-preset="fan">💨 Вентилятор (скорость + / −)</button>
+        <button class="preset-btn" data-preset="custom">⚙️ Своя настройка</button>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label class="motor-invert-label">
+          <input type="checkbox" id="checkHoldMode" checked>
+          <span>Режим «пока держишь клавишу»: мотор крутится, пока клавиша зажата, и сразу останавливается, когда отпустили.</span>
+        </label>
+      </div>
+
+      <div class="remote-layout">
+        <!-- Таблица клавиша -> действие -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-title" style="font-size: 18px;">⌨️ Назначенные клавиши</div>
+          <div class="key-table-wrap">
+            <table class="key-table">
+              <thead>
+                <tr>
+                  <th>Клавиша</th>
+                  <th>Порт</th>
+                  <th>Действие</th>
+                  <th>Мощность</th>
+                </tr>
+              </thead>
+              <tbody id="keyTableBody">
+                <!-- Заполняется динамически -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Экранный геймпад для планшетов -->
+        <div class="gamepad-box">
+          <h4 style="font-size: 16px; font-weight: 800;">Экранный пульт</h4>
+          <div class="dpad">
+            <button class="dpad-btn dpad-up" data-code="ArrowUp">↑</button>
+            <button class="dpad-btn dpad-left" data-code="ArrowLeft">←</button>
+            <button class="dpad-btn dpad-center" data-code="Space" title="Аварийный стоп">⏹</button>
+            <button class="dpad-btn dpad-right" data-code="ArrowRight">→</button>
+            <button class="dpad-btn dpad-down" data-code="ArrowDown">↓</button>
+          </div>
+          <div class="pad-action-btns">
+            <button class="pad-motor-btn" id="padMotorAAction">[A] ↻ Мотор</button>
+            <button class="pad-motor-btn" id="padMotorBAction">[B] ↻ Мотор</button>
+          </div>
+          <div style="font-size: 12px; color: #94A3B8; text-align: center;">
+            Зажимай кнопки пальцем или мышкой. Для остановки нажми ⏹ или Пробел.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- ВКЛАДКА 3: ПРОГРАММА (BLOCKLY)                           -->
+  <!-- ======================================================== -->
+  <section class="page-tab" id="tab-blocks">
+    <!-- Верхняя панель управления программой -->
+    <div class="editor-top-controls">
+      <div class="run-controls">
+        <button class="btn green" id="btnRunProgram" style="font-size: 15px;">▶ Старт</button>
+        <button class="btn orange" id="btnPauseProgram">⏸ Пауза</button>
+        <button class="btn red" id="btnStopProgram">⏹ Стоп</button>
+        <button class="btn purple" id="btnStepProgram">👣 По шагам</button>
+      </div>
+
+      <div class="file-controls">
+        <button class="btn light" id="btnOpenExamples">📋 Примеры программ</button>
+        <button class="btn light" id="btnDownloadProgram">💾 Скачать (.json)</button>
+        <button class="btn light" id="btnUploadProgram">📂 Открыть</button>
+        <input type="file" id="fileProgramInput" accept=".json" style="display: none;">
+        <button class="btn light" id="btnClearProgram" title="Очистить всё поле">🗑️</button>
+        <label class="motor-invert-label" style="margin-left: 6px;">
+          <input type="checkbox" id="checkAdvancedMode">
+          <span style="font-size: 13px;">⚙️ Продвинутый</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Редактор Blockly + Панель чтения -->
+    <div class="workspace-layout">
+      <!-- Рабочая область Blockly -->
+      <div class="blockly-wrapper">
+        <div id="blocklyDiv"></div>
+      </div>
+
+      <!-- Панель «Как читается программа» -->
+      <div class="reader-panel">
+        <div class="reader-header">
+          <h3 id="readerTitle">📖 Как читается программа</h3>
+          <button class="btn light" id="btnToggleCodeView" style="font-size: 12px; padding: 6px 10px; min-height: 32px;">
+            Показать JS-код
+          </button>
+        </div>
+        <div class="reader-body" id="readerBody">
+          Загрузка блоков...
+        </div>
+      </div>
+    </div>
+
+    <!-- Нижняя строка симулятора моторов для визуализации программы -->
+    <div class="program-sim-bar">
+      <div class="program-sim-gear-item">
+        <svg class="gear-svg" id="progGearA" viewBox="0 0 100 100" style="width: 44px; height: 44px;">
+          <circle cx="50" cy="50" r="36" fill="#006CB7" />
+          <circle cx="50" cy="50" r="14" fill="#FFD700" />
+        </svg>
+        <div>
+          <div style="font-weight: 800; font-size: 13px;">Мотор A:</div>
+          <div style="font-size: 12px; color: var(--muted);" id="progMotorAStatus">Остановлен</div>
+        </div>
+      </div>
+
+      <div class="program-sim-gear-item">
+        <svg class="gear-svg" id="progGearB" viewBox="0 0 100 100" style="width: 44px; height: 44px;">
+          <circle cx="50" cy="50" r="36" fill="#FF6B00" />
+          <circle cx="50" cy="50" r="14" fill="#FFD700" />
+        </svg>
+        <div>
+          <div style="font-weight: 800; font-size: 13px;">Мотор B:</div>
+          <div style="font-size: 12px; color: var(--muted);" id="progMotorBStatus">Остановлен</div>
+        </div>
+      </div>
+
+      <div class="program-sim-gear-item">
+        <div class="hub-led-preview" id="progLedStatus" style="width: 24px; height: 24px;"></div>
+        <div>
+          <div style="font-weight: 800; font-size: 13px;">Светодиод:</div>
+          <div style="font-size: 12px; color: var(--muted);" id="progLedColorName">Зелёный</div>
+        </div>
+      </div>
+
+      <div class="program-sim-gear-item">
+        <span style="font-size: 24px;">📏</span>
+        <div>
+          <div style="font-weight: 800; font-size: 13px;">Датчик расстояния:</div>
+          <div style="font-size: 12px; color: var(--muted);" id="progDistanceStatus">10 (Свободно)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- МОДАЛЬНОЕ ОКНО ПРИМЕРОВ ПРОГРАММ -->
+<div class="modal-overlay" id="examplesModal">
+  <div class="modal-content-box">
+    <button class="modal-close-btn" id="modalCloseBtn">✕</button>
+    <h3 style="font-family: 'Baloo 2', sans-serif; font-size: 24px; color: var(--navy2);">
+      📋 Выбери пример программы
+    </h3>
+    <p style="color: var(--muted); font-size: 14px; margin-top: 4px;">
+      Открой готовую программу к уроку, запусти её или измени по своему вкусу!
+    </p>
+
+    <div class="example-list">
+      <div class="example-item-card" data-example="1">
+        <div class="example-icon">💨</div>
+        <div class="example-info">
+          <h4>Урок 1: Вентилятор</h4>
+          <p>Вращение мотора вправо с мощностью 8 на 3 сек, пауза, реверс влево с мощностью 5 и стоп.</p>
+        </div>
+      </div>
+
+      <div class="example-item-card" data-example="3">
+        <div class="example-icon">🚪</div>
+        <div class="example-info">
+          <h4>Урок 3: Автоматические ворота</h4>
+          <p>Датчик расстояния замечает машину, огонёк меняется на зелёный, ворота открываются и закрываются.</p>
+        </div>
+      </div>
+
+      <div class="example-item-card" data-example="4">
+        <div class="example-icon">🕹️</div>
+        <div class="example-info">
+          <h4>Урок 4: Джойстик управляет мотором</h4>
+          <p>Наклон вперёд — мотор крутится вперёд, наклон назад — реверс, когда джойстик ровно — стоп.</p>
+        </div>
+      </div>
+
+      <div class="example-item-card" data-example="5">
+        <div class="example-icon">🚗</div>
+        <div class="example-info">
+          <h4>Урок 5: Научный ровер Майло</h4>
+          <p>Вездеход едет вперёд, пока датчик расстояния не увидит образец, останавливается и празднует победу!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- СКРИПТЫ -->
+<script src="../shared/wedo.js?v=2"></script>
+<script src="blocks.js?v=2"></script>
+<script src="reader.js?v=2"></script>
+<script src="runtime.js?v=2"></script>
+<script src="examples.js?v=2"></script>
+<script src="app.js?v=3"></script>
+</body>
+</html>

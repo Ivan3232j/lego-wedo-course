@@ -1,7 +1,9 @@
 /*
- * Джойстик для мини-игр.
+ * games/joystick.js
+ * Джойстик для мини-игр LEGO WeDo 2.0.
+ * Использует общий модуль shared/wedo.js для связи со смартхабом.
  * Источники управления (работают одновременно):
- *   1) LEGO WeDo 2.0 смартхаб + датчик наклона — по Bluetooth (Web Bluetooth, Chrome/Edge);
+ *   1) LEGO WeDo 2.0 смартхаб + датчик наклона — по Bluetooth через shared/wedo.js;
  *   2) клавиатура — стрелки или WASD;
  *   3) экранный стик — мышью или пальцем.
  *
@@ -12,18 +14,8 @@
 (function () {
   'use strict';
 
-  // UUID сервисов и характеристик смартхаба WeDo 2.0
-  const HUB_SERVICE  = '00001523-1212-efde-1523-785feabcd123';
-  const IO_SERVICE   = '00004f0e-1212-efde-1523-785feabcd123';
-  const CH_ATTACHED  = '00001527-1212-efde-1523-785feabcd123'; // подключение устройств к портам
-  const CH_SENSOR    = '00001560-1212-efde-1523-785feabcd123'; // значения датчиков
-  const CH_INPUT_CMD = '00001563-1212-efde-1523-785feabcd123'; // настройка режима датчика
-  const CH_OUTPUT    = '00001565-1212-efde-1523-785feabcd123'; // моторы, светодиод
-
-  const TYPE_TILT = 0x22;   // датчик наклона
-  const MAX_ANGLE = 30;     // наклон (в «сырых» единицах) = полный ход стика
+  const MAX_ANGLE = 30; // наклон (в «сырых» единицах) = полный ход стика
   const DEADZONE  = 0.18;
-
   const SETTINGS_KEY = 'wedo-joystick-settings';
 
   const Joy = {
@@ -33,7 +25,7 @@
     listeners: [],
     onStatus(fn) { this.listeners.push(fn); },
     _emit() { this.listeners.forEach(fn => { try { fn(this.hub); } catch (e) { console.error(e); } }); },
-    bluetoothSupported: !!(navigator.bluetooth && navigator.bluetooth.requestDevice),
+    bluetoothSupported: typeof WeDo !== 'undefined' ? WeDo.isBluetoothSupported() : !!(navigator.bluetooth && navigator.bluetooth.requestDevice),
   };
 
   try {
@@ -126,97 +118,37 @@
     saveSettings();
   };
 
-  // ── Bluetooth ────────────────────────────────────────────────
-  let device = null, inputCmd = null, outputCmd = null, lastLed = -1;
-  let writeChain = Promise.resolve();
-
-  // GATT не любит параллельные записи — выстраиваем их в очередь
-  function write(ch, bytes) {
-    if (!ch) return Promise.resolve();
-    writeChain = writeChain
-      .then(() => ch.writeValue(new Uint8Array(bytes)))
-      .catch(e => console.warn('WeDo write failed', e));
-    return writeChain;
-  }
-
-  function onAttached(event) {
-    const v = new Uint8Array(event.target.value.buffer);
-    const port = v[0], attached = v[1] === 1, type = v[3];
-    if (attached && type === TYPE_TILT) {
-      Joy.hub.tiltPort = port;
-      // режим 0 = угол наклона (X и Y), интервал 1, единицы «сырые», уведомления вкл.
-      write(inputCmd, [0x01, 0x02, port, TYPE_TILT, 0x00, 0x01, 0, 0, 0, 0x00, 0x01]);
+  // ── Интеграция с WeDo модулем ────────────────────────────────
+  if (typeof WeDo !== 'undefined') {
+    WeDo.onStatus(st => {
+      Joy.hub.connected = st.connected;
+      Joy.hub.connecting = st.connecting;
+      Joy.hub.name = st.name || '';
+      Joy.hub.tiltPort = st.tilt.port;
       Joy._emit();
-    } else if (!attached && port === Joy.hub.tiltPort) {
-      Joy.hub.tiltPort = null;
-      Joy.hub.rawX = Joy.hub.rawY = 0;
-      Joy._emit();
-    }
+    });
+
+    WeDo.onSensor(data => {
+      if (data.type === 'tilt') {
+        Joy.hub.rawX = data.x;
+        Joy.hub.rawY = data.y;
+        Joy.hub.tiltPort = data.port;
+        Joy._emit();
+      }
+    });
+
+    Joy.connect = async function () {
+      return WeDo.connect();
+    };
+
+    Joy.disconnect = function () {
+      WeDo.disconnect();
+    };
+
+    Joy.setLed = function (color) {
+      WeDo.setLed(color);
+    };
   }
-
-  function onSensor(event) {
-    const dv = event.target.value;
-    if (dv.byteLength < 4) return;
-    const port = dv.getUint8(1);
-    if (port !== Joy.hub.tiltPort) return;
-    Joy.hub.rawX = dv.getInt8(2);
-    Joy.hub.rawY = dv.getInt8(3);
-  }
-
-  function onDisconnected() {
-    lastLed = -1;
-    Object.assign(Joy.hub, { connected: false, connecting: false, tiltPort: null, rawX: 0, rawY: 0 });
-    inputCmd = outputCmd = null;
-    Joy._emit();
-  }
-
-  Joy.connect = async function () {
-    if (!Joy.bluetoothSupported) throw new Error('Этот браузер не умеет Bluetooth. Открой страницу в Chrome или Edge на компьютере/Android.');
-    Joy.hub.connecting = true; Joy._emit();
-    try {
-      device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: [HUB_SERVICE] }, { namePrefix: 'LPF2' }],
-        optionalServices: [HUB_SERVICE, IO_SERVICE],
-      });
-      device.addEventListener('gattserverdisconnected', onDisconnected);
-      const server = await device.gatt.connect();
-      const hubSvc = await server.getPrimaryService(HUB_SERVICE);
-      const ioSvc  = await server.getPrimaryService(IO_SERVICE);
-      inputCmd  = await ioSvc.getCharacteristic(CH_INPUT_CMD);
-      outputCmd = await ioSvc.getCharacteristic(CH_OUTPUT);
-
-      const sensor = await ioSvc.getCharacteristic(CH_SENSOR);
-      sensor.addEventListener('characteristicvaluechanged', onSensor);
-      await sensor.startNotifications();
-
-      const attached = await hubSvc.getCharacteristic(CH_ATTACHED);
-      attached.addEventListener('characteristicvaluechanged', onAttached);
-      await attached.startNotifications();
-
-      Object.assign(Joy.hub, { connected: true, connecting: false, name: device.name || 'WeDo 2.0' });
-      Joy._emit();
-      Joy.setLed(6);
-    } catch (e) {
-      Joy.hub.connecting = false;
-      if (device && device.gatt.connected) device.gatt.disconnect();
-      Joy._emit();
-      throw e;
-    }
-  };
-
-  Joy.disconnect = function () {
-    if (device && device.gatt.connected) device.gatt.disconnect();
-  };
-
-  /* Цвет светодиода смартхаба:
-     0 выкл, 1 розовый, 2 фиолетовый, 3 синий, 4 голубой, 5 бирюзовый,
-     6 зелёный, 7 жёлтый, 8 оранжевый, 9 красный, 10 белый */
-  Joy.setLed = function (color) {
-    if (!Joy.hub.connected || color === lastLed) return;
-    lastLed = color;
-    write(inputCmd, [0x06, 0x17, 0x01, 0x01]);
-    write(outputCmd, [0x06, 0x04, 0x01, color]);
-  };
 
   window.Joy = Joy;
 })();

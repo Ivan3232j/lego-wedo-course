@@ -1,0 +1,929 @@
+/*
+ * programming/style.css
+ * Стили раздела «Программирование WeDo 2.0»
+ * Дизайн-система LEGO WeDo: Nunito, Baloo 2, фирменные цвета, крупные кнопки.
+ */
+
+:root {
+  --red: #E3000B;
+  --yellow: #FFD700;
+  --blue: #006CB7;
+  --green: #00A650;
+  --orange: #FF6B00;
+  --purple: #8B5CF6;
+  --navy: #0E1E38;
+  --navy2: #1A365D;
+  --bg: #F4F6FB;
+  --card: #FFFFFF;
+  --text: #1C2536;
+  --muted: #616E85;
+  --border: #E2E8F0;
+  --shadow: 0 8px 24px rgba(0, 30, 80, 0.08);
+  --shadow-lg: 0 16px 36px rgba(0, 30, 80, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ── ВЕРХНЯЯ ШАПКА ─────────────────────────────────────────── */
+.topbar {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+  color: #fff;
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 4px 16px rgba(14, 30, 56, 0.3);
+}
+
+.topbar-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.back-link {
+  color: #CBD5E1;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.back-link:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+}
+
+.logo-lego {
+  background: var(--red);
+  color: #fff;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  padding: 2px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+
+.brand h1 {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+/* Статус Bluetooth и кнопки */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.conn-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #CBD5E1;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 8px 14px;
+  border-radius: 12px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #64748B;
+  flex: none;
+  transition: all 0.3s;
+}
+
+.status-dot.connected {
+  background: #22C55E;
+  box-shadow: 0 0 10px #22C55E;
+}
+
+.status-dot.connecting {
+  background: var(--yellow);
+  box-shadow: 0 0 8px var(--yellow);
+}
+
+.hub-led-preview {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #22C55E;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 10px #22C55E;
+  flex: none;
+  transition: all 0.2s;
+}
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-weight: 800;
+  font-size: 14px;
+  color: #fff;
+  background: var(--blue);
+  box-shadow: 0 4px 12px rgba(0, 108, 183, 0.35);
+  transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 16px rgba(0, 108, 183, 0.4);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn.green {
+  background: var(--green);
+  box-shadow: 0 4px 12px rgba(0, 166, 80, 0.35);
+}
+
+.btn.red {
+  background: var(--red);
+  box-shadow: 0 4px 12px rgba(227, 0, 11, 0.35);
+}
+
+.btn.orange {
+  background: var(--orange);
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.35);
+}
+
+.btn.purple {
+  background: var(--purple);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+}
+
+.btn.ghost {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  box-shadow: none;
+}
+
+.btn.ghost:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.btn.light {
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ── НАВИГАЦИЯ ПО ВКЛАДКАМ ──────────────────────────────────── */
+.nav-tabs-wrapper {
+  background: #fff;
+  border-bottom: 2px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  position: sticky;
+  top: 60px;
+  z-index: 40;
+}
+
+.nav-tabs {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  gap: 12px;
+  padding: 0 16px;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--muted);
+  border-bottom: 4px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--blue);
+}
+
+.tab-btn.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+/* ── ОСНОВНОЙ КОНТЕНТ ───────────────────────────────────────── */
+main {
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+  flex: 1;
+}
+
+.page-tab {
+  display: none;
+}
+
+.page-tab.active {
+  display: block;
+}
+
+/* Карточки */
+.card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* ── ВКЛАДКА 1: ПОДКЛЮЧЕНИЕ И МОТОР ────────────────────────── */
+.hub-hero-card {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 2px solid #BFDBFE;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.hub-hero-info h2 {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 26px;
+  color: #1E3A8A;
+  margin-bottom: 6px;
+}
+
+.hub-hero-info p {
+  color: #3B82F6;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ports-banner {
+  display: flex;
+  gap: 16px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.port-pill {
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.port-pill-badge {
+  background: var(--blue);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+/* Карточка мотора */
+.motor-card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.motor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.motor-badge {
+  background: #EFF6FF;
+  color: var(--blue);
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+/* Визуализатор вращения шестерёнки */
+.motor-visual {
+  height: 140px;
+  background: #F8FAFC;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border: 2px dashed #E2E8F0;
+}
+
+.gear-svg {
+  width: 90px;
+  height: 90px;
+  transform-origin: center;
+  transition: transform 0.05s linear;
+}
+
+.motor-visual-text {
+  position: absolute;
+  bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+/* Ползунок мощности */
+.power-slider-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.power-slider-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.power-val {
+  color: var(--blue);
+  font-size: 16px;
+}
+
+.slider-custom {
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background: #E2E8F0;
+  outline: none;
+  accent-color: var(--blue);
+}
+
+/* Кнопки мотора */
+.motor-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-motor-action {
+  font-size: 15px;
+  padding: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.motor-invert-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.motor-invert-label input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+}
+
+/* Карточки датчиков */
+.sensor-card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tilt-compass {
+  height: 140px;
+  background: #F8FAFC;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #E2E8F0;
+  position: relative;
+}
+
+.tilt-arrow-icon {
+  font-size: 48px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tilt-state-badge {
+  font-weight: 800;
+  font-size: 16px;
+  margin-top: 6px;
+  color: var(--navy2);
+}
+
+.distance-track {
+  height: 48px;
+  background: #F1F5F9;
+  border-radius: 14px;
+  padding: 6px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 2px solid #E2E8F0;
+}
+
+.distance-bar {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #22C55E 0%, #EAB308 60%, #EF4444 100%);
+  transition: width 0.15s ease-out;
+  width: 100%;
+}
+
+.distance-num-badge {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--navy2);
+  text-align: center;
+}
+
+.sim-control-box {
+  background: #FFFBEB;
+  border: 1px solid #FEF08A;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 13px;
+  color: #854D0E;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── ВКЛАДКА 2: ПУЛЬТ ───────────────────────────────────────── */
+.remote-presets {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.preset-btn {
+  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  transition: all 0.15s;
+}
+
+.preset-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.preset-btn.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+.remote-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+.key-table-wrap {
+  overflow-x: auto;
+}
+
+.key-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.key-table th {
+  text-align: left;
+  padding: 12px 14px;
+  background: #F8FAFC;
+  color: var(--muted);
+  font-weight: 800;
+  border-bottom: 2px solid var(--border);
+}
+
+.key-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.kbd-badge {
+  background: #F1F5F9;
+  border: 2px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--navy2);
+  display: inline-block;
+  box-shadow: 0 2px 0 #94A3B8;
+}
+
+/* Экранный геймпад для планшетов */
+.gamepad-box {
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  border-radius: 20px;
+  padding: 20px;
+  color: #fff;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: 60px 60px 60px;
+  grid-template-rows: 60px 60px 60px;
+  gap: 6px;
+}
+
+.dpad-btn {
+  background: #334155;
+  border: 2px solid #475569;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: manipulation;
+  transition: all 0.1s;
+}
+
+.dpad-btn:active, .dpad-btn.pressed {
+  background: var(--blue);
+  border-color: #60A5FA;
+  transform: scale(0.95);
+}
+
+.dpad-up    { grid-column: 2; grid-row: 1; }
+.dpad-left  { grid-column: 1; grid-row: 2; }
+.dpad-center{ grid-column: 2; grid-row: 2; background: var(--red); border-color: #F87171; font-size: 18px; }
+.dpad-right { grid-column: 3; grid-row: 2; }
+.dpad-down  { grid-column: 2; grid-row: 3; }
+
+.pad-action-btns {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.pad-motor-btn {
+  flex: 1;
+  background: #334155;
+  border: 2px solid #475569;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 6px;
+  font-weight: 800;
+  font-size: 13px;
+  text-align: center;
+  user-select: none;
+}
+
+.pad-motor-btn:active, .pad-motor-btn.pressed {
+  background: var(--green);
+  border-color: #4ADE80;
+}
+
+/* ── ВКЛАДКА 3: ПРОГРАММА (BLOCKLY) ────────────────────────── */
+.editor-top-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.run-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.file-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.workspace-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  height: 620px;
+}
+
+.blockly-wrapper {
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  position: relative;
+  height: 100%;
+}
+
+#blocklyDiv {
+  width: 100%;
+  height: 100%;
+}
+
+/* Панель «Как читается программа» */
+.reader-panel {
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.reader-header {
+  padding: 14px 18px;
+  background: #F8FAFC;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reader-header h3 {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.reader-body {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+  font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: #1E293B;
+  background: #FAFAFA;
+}
+
+.reader-body.js-code {
+  color: #0F172A;
+  background: #F1F5F9;
+}
+
+/* Симулятор шестерёнки внизу программы */
+.program-sim-bar {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 20px;
+  margin-top: 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.program-sim-gear-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Модальное окно примеров */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 30, 56, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.open {
+  display: flex;
+}
+
+.modal-content-box {
+  background: #fff;
+  border-radius: 24px;
+  max-width: 650px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: #F1F5F9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.example-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.example-item-card {
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.example-item-card:hover {
+  border-color: var(--blue);
+  background: #EFF6FF;
+  transform: translateY(-2px);
+}
+
+.example-icon {
+  font-size: 32px;
+  flex: none;
+}
+
+.example-info h4 {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy2);
+}
+
+.example-info p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── АДАПТИВНОСТЬ ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .workspace-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .blockly-wrapper {
+    height: 520px;
+  }
+  .reader-panel {
+    height: 320px;
+  }
+  .remote-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .brand {
+    margin-right: 0;
+  }
+  .blockly-wrapper {
+    height: 440px;
+  }
+}
