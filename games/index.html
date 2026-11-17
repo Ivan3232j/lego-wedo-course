@@ -82,6 +82,14 @@
   .settings-col { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #E2E8F0; }
   .settings-col label { display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; }
   .settings-col input { width: 18px; height: 18px; accent-color: var(--yellow); }
+  .dist-bar {
+    width: 220px; height: 16px; border-radius: 8px; background: rgba(255,255,255,0.12); overflow: hidden;
+  }
+  .dist-fill { height: 100%; width: 0; background: linear-gradient(90deg, #22C55E, var(--yellow)); border-radius: 8px; }
+  .section-title {
+    font-family: 'Baloo 2', sans-serif; font-size: 22px; margin: 26px 0 4px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
   .raw { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #94A3B8; }
   .hint { font-size: 13px; color: #94A3B8; max-width: 380px; line-height: 1.4; }
 
@@ -186,7 +194,17 @@
       <label><input type="checkbox" id="optInvX"> Перевернуть влево ↔ вправо</label>
       <label><input type="checkbox" id="optInvY"> Перевернуть вперёд ↕ назад</label>
     </div>
+    <div class="settings-col">
+      <div class="dist-bar"><div class="dist-fill" id="distFill"></div></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn green" id="distNearBtn">✋ Рука близко</button>
+        <button class="btn ghost" id="distFarBtn">🌫 Рука далеко</button>
+      </div>
+      <div class="raw" id="distRaw">дальномер: —</div>
+    </div>
     <div class="hint">
+      Дальномер: поднеси ладонь вплотную — нажми «Рука близко», убери подальше — «Рука далеко».
+      Полоска должна заполняться, когда рука приближается.<br><br>
       Наклони джойстик и смотри на жёлтую точку. Наклон вперёд должен вести точку вверх,
       вправо — вправо. Если точка убегает не туда — поставь галочки. Держи джойстик ровно и нажми «Сейчас ровно».
     </div>
@@ -197,15 +215,21 @@
   <section class="menu" id="menu">
     <div class="intro">
       <h2>Выбери игру</h2>
-      <p>Собери джойстик из урока №4, подключи смартхаб — и управляй играми наклоном руки.
+      <p>Подключи смартхаб и играй датчиком наклона (модель «Джойстик» из урока №4) или датчиком расстояния.
         Нет смартхаба? Играй стрелками на клавиатуре или экранным стиком.</p>
     </div>
+    <h3 class="section-title">📐 Датчик наклона — джойстик</h3>
+    <p class="section-sub">Модель «Джойстик» из урока №4: наклоняй рукоятку.</p>
     <div class="games-grid" id="gamesGrid"></div>
+
+    <h3 class="section-title">📏 Датчик расстояния — дальномер</h3>
+    <p class="section-sub">Вставь в смартхаб датчик расстояния и води над ним ладонью: ближе — дальше. Без датчика — стрелки ↑ ↓.</p>
+    <div class="games-grid" id="gamesGridDist"></div>
 
     <div class="howto">
       <h3>🔌 Как подключить джойстик</h3>
       <ol>
-        <li>Собери модель «Джойстик» и вставь датчик наклона в любой порт смартхаба.</li>
+        <li>Собери модель «Джойстик» и вставь датчик наклона в любой порт смартхаба. Для игр с дальномером вставь датчик расстояния (можно оба сразу).</li>
         <li>Закрой приложение WeDo 2.0 на всех устройствах — смартхаб может дружить только с одним.</li>
         <li>Нажми «🔵 Подключить WeDo», затем зелёную кнопку на смартхабе. Выбери его в списке.</li>
         <li>Огонёк смартхаба станет зелёным. Открой ⚙️ и проверь, что жёлтая точка двигается правильно.</li>
@@ -240,13 +264,16 @@
   </section>
 </main>
 
-<script src="../shared/wedo.js"></script>
-<script src="joystick.js"></script>
-<script src="engine.js"></script>
-<script src="game-race.js"></script>
-<script src="game-crane.js"></script>
-<script src="game-shooting.js"></script>
-<script src="game-maze.js"></script>
-<script src="app.js"></script>
+<script src="../shared/wedo.js?v=4"></script>
+<script src="joystick.js?v=4"></script>
+<script src="engine.js?v=4"></script>
+<script src="game-race.js?v=4"></script>
+<script src="game-crane.js?v=4"></script>
+<script src="game-shooting.js?v=4"></script>
+<script src="game-maze.js?v=4"></script>
+<script src="game-heli.js?v=4"></script>
+<script src="game-catch.js?v=4"></script>
+<script src="game-lights.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

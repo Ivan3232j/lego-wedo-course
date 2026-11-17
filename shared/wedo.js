@@ -151,7 +151,21 @@
   }
 
   // Вычисление направления по сырым X и Y датчика наклона
+  // Учитываем настройки джойстика из раздела игр (⚙️ там же калибруется «ровно»
+  // и направление осей), чтобы «вперёд» в играх и в программе совпадало.
+  function applyJoystickSettings(x, y) {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem('wedo-joystick-settings') || 'null'); } catch (e) {}
+    if (!s) return [x, y];
+    x -= s.offX || 0; y -= s.offY || 0;
+    if (s.swap) { const t = x; x = y; y = t; }
+    if (s.invX) x = -x;
+    if (s.invY) y = -y;
+    return [x, y];
+  }
+
   function computeTiltDirection(x, y) {
+    [x, y] = applyJoystickSettings(x, y);
     const THRESHOLD = 14;
     if (Math.abs(x) < THRESHOLD && Math.abs(y) < THRESHOLD) {
       return 'flat';
@@ -230,10 +244,13 @@
       state.tilt.direction = computeTiltDirection(rx, ry);
       emit('sensor', { type: 'tilt', port: letter, x: rx, y: ry, direction: state.tilt.direction });
     } else if (p.type === TYPE_DISTANCE) {
-      let dist = dv.getUint8(2);
-      if (dist > 10) dist = 10;
+      // Сырое значение: байт 2, а байт 3 = 1 означает «плюс 255»
+      let raw = dv.getUint8(2);
+      if (dv.byteLength >= 4 && dv.getUint8(3) === 1) raw += 255;
+      state.distance.raw = raw;
+      const dist = Math.min(10, raw);
       state.distance.val = dist;
-      emit('sensor', { type: 'distance', port: letter, value: dist });
+      emit('sensor', { type: 'distance', port: letter, value: dist, raw });
     }
   }
 
@@ -255,6 +272,7 @@
     state.ports.B.title = 'Ничего не подключено';
     state.motors.A.power = 0;
     state.motors.B.power = 0;
+    state.ledSent = false;
 
     emit('status', state);
     emit('ports', state.ports);
@@ -316,7 +334,10 @@
 
         emit('status', state);
 
+        // Светодиод в режим «цвет по номеру» (входная команда: порт 6, тип 0x17, режим 0)
+        queueWrite(chInputCmd, [0x01, 0x02, 0x06, 0x17, 0x00, 0x01, 0, 0, 0, 0x00, 0x00]);
         // По умолчанию зажигаем зелёный огонёк готовности
+        state.ledSent = false;
         this.setLed(6);
         return true;
       } catch (err) {
@@ -355,12 +376,16 @@
         pwr = -pwr;
       }
 
+      const changed = state.motors[pLet].power !== pwr;
       state.motors[pLet].power = pwr;
 
-      if (state.connected && chOutputCmd) {
-        // WeDo 2.0 Motor write: [port, 0x01, 0x02, powerInt8]
+      // Одинаковую мощность повторно не шлём, чтобы не забивать очередь Bluetooth.
+      // Стоп (0) шлём всегда — это команда безопасности.
+      if (state.connected && chOutputCmd && (changed || pwr === 0)) {
+        // Формат выходной команды WeDo 2.0: [порт, команда, длина данных, данные…]
+        // Команда 0x01 = мощность мотора, данные — 1 байт со знаком (-100..100).
         const rawByte = (pwr < 0 ? (256 + pwr) : pwr) & 0xFF;
-        queueWrite(chOutputCmd, [pNum, 0x01, 0x02, rawByte]);
+        queueWrite(chOutputCmd, [pNum, 0x01, 0x01, rawByte]);
       }
 
       emit('motor', { port: pLet, power: pwr, pNum });
@@ -401,10 +426,12 @@
     // Управление светодиодом (color: 0..10)
     setLed(color) {
       const col = Math.max(0, Math.min(10, Math.round(Number(color) || 0)));
+      if (col === state.ledColor && state.ledSent) return; // тот же цвет уже горит
       state.ledColor = col;
-      if (state.connected && chInputCmd && chOutputCmd) {
-        queueWrite(chInputCmd, [0x06, 0x17, 0x01, 0x01]);
+      if (state.connected && chOutputCmd) {
+        // [порт светодиода 6, команда 0x04 «цвет по номеру», длина 1, номер цвета]
         queueWrite(chOutputCmd, [0x06, 0x04, 0x01, col]);
+        state.ledSent = true;
       }
       emit('status', state);
     },

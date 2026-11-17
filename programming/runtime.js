@@ -124,10 +124,44 @@
   let stepResolver = null;
   let executionId = 0; // для отмены предыдущих запусков
   const pressedKeys = new Set();
+  const activeHats = new Set();      // события, обработчик которых сейчас выполняется
+  const distBelow = {};              // для «Когда расстояние меньше»: было ли уже меньше порога
+  let threads = 0;
+
+  // Запуск цепочки блоков под шапкой события как отдельного потока.
+  // Пока поток события работает, повторно то же событие не запускается.
+  function runThread(hat, first, execId) {
+    if (!first || activeHats.has(hat.id)) return;
+    activeHats.add(hat.id);
+    threads++;
+    executeBlock(first, execId)
+      .catch(() => {})
+      .finally(() => {
+        if (execId !== executionId) return; // поток от прошлого запуска — счётчики уже сброшены
+        activeHats.delete(hat.id);
+        threads--;
+        {
+          try { workspace && workspace.highlightBlock(null); } catch (e) {}
+          // Программа без событий закончилась сама — снимаем «выполняется»
+          if (threads === 0 && !hasEventHats()) {
+            running = false; paused = false; stepMode = false;
+            Runtime._emitChange();
+          }
+        }
+      });
+  }
+
+  function hasEventHats() {
+    return !!workspace && workspace.getTopBlocks(false).some(b => b.type.startsWith('event_') && b.type !== 'event_start');
+  }
 
   // Отслеживание нажатий клавиш для событий
   window.addEventListener('keydown', e => {
     pressedKeys.add(e.code);
+    // Автоповтор зажатой клавиши не должен запускать событие снова и снова
+    if (e.repeat) return;
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea') return;
     if (running && !paused) {
       Runtime.triggerEvent('key', e.code);
     }
@@ -152,6 +186,9 @@
       } else if (data.type === 'distance') {
         Runtime.triggerEvent('distance', data.value);
       }
+    });
+    WeDo.onStatus(st => {
+      if (!st.connected) lastTiltDir = 'flat';
     });
   }
 
@@ -371,15 +408,22 @@
       const topBlocks = workspace.getTopBlocks(true);
 
       // Запускаем все блоки 'event_start' или обычные блоки, лежащие без событий
+      activeHats.clear();
+      threads = 0;
+      Object.keys(distBelow).forEach(k => delete distBelow[k]);
       topBlocks.forEach(b => {
         if (b.type === 'event_start') {
-          const next = b.getNextBlock();
-          if (next) executeBlock(next, currentExec).catch(() => {});
+          runThread(b, b.getNextBlock(), currentExec);
         } else if (!b.type.startsWith('event_')) {
           // Если блок не шапка события — запускаем сразу
-          executeBlock(b, currentExec).catch(() => {});
+          runThread(b, b, currentExec);
         }
       });
+      // Пустая программа без событий — сразу «готово»
+      if (threads === 0 && !hasEventHats()) {
+        running = false;
+        this._emitChange();
+      }
     },
 
     // Пауза / Возобновление
@@ -436,21 +480,16 @@
 
       topBlocks.forEach(b => {
         if (eventType === 'key' && b.type === 'event_key') {
-          if (b.getFieldValue('KEY') === value) {
-            const next = b.getNextBlock();
-            if (next) executeBlock(next, currentExec).catch(() => {});
-          }
+          if (b.getFieldValue('KEY') === value) runThread(b, b.getNextBlock(), currentExec);
         } else if (eventType === 'tilt' && b.type === 'event_tilt') {
-          if (b.getFieldValue('DIR') === value) {
-            const next = b.getNextBlock();
-            if (next) executeBlock(next, currentExec).catch(() => {});
-          }
+          if (b.getFieldValue('DIR') === value) runThread(b, b.getNextBlock(), currentExec);
         } else if (eventType === 'distance' && b.type === 'event_distance') {
+          // Срабатывает один раз, когда расстояние стало меньше порога
+          // (а не на каждое измерение, пока рука рядом)
           const threshold = Number(b.getFieldValue('DIST')) || 5;
-          if (value < threshold) {
-            const next = b.getNextBlock();
-            if (next) executeBlock(next, currentExec).catch(() => {});
-          }
+          const below = value < threshold;
+          if (below && !distBelow[b.id]) runThread(b, b.getNextBlock(), currentExec);
+          distBelow[b.id] = below;
         }
       });
     },

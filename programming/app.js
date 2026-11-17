@@ -98,6 +98,11 @@
   }
 
   function switchTab(targetId) {
+    // Уходим с вкладки «Пульт» с зажатой клавишей — мотор не должен остаться включённым
+    if (targetId !== 'tab-remote' && activeKeys.size) {
+      activeKeys.clear();
+      WeDo.stopAllMotors();
+    }
     document.querySelectorAll('.tab-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.tab === targetId);
     });
@@ -419,7 +424,14 @@
     });
   }
 
+  function remoteTabActive() {
+    const tab = document.getElementById('tab-remote');
+    return !!tab && tab.classList.contains('active');
+  }
+
   function handleRemoteKeyDown(e) {
+    // Пульт слушает клавиши только на своей вкладке — иначе он перебивал бы программу
+    if (!remoteTabActive()) return;
     // Если фокус в текстовом поле ввода или модальном окне — не перехватываем
     const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
     if (tag === 'input' || tag === 'textarea') return;

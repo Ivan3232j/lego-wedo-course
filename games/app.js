@@ -16,9 +16,10 @@
 
   // ── Меню ──
   function renderMenu() {
-    const grid = $('gamesGrid');
-    grid.innerHTML = '';
+    const grids = { tilt: $('gamesGrid'), distance: $('gamesGridDist') };
+    Object.values(grids).forEach(g => { g.innerHTML = ''; });
     G.games.forEach(def => {
+      const grid = grids[def.sensor || 'tilt'];
       const best = getBest(def);
       const card = document.createElement('button');
       card.className = 'game-card';
@@ -60,7 +61,7 @@
   function restart() {
     game = def.create();
     window.currentGame = game; // для отладки из консоли
-    phase = 'ready'; phaseTime = 0; holdTime = 0; newRecord = false;
+    phase = 'ready'; phaseTime = 0; holdTime = 0; newRecord = false; distArmed = false;
     Joy.setLed(def.led ?? 3);
   }
 
@@ -104,6 +105,8 @@
 
   $('settingsBtn').onclick = () => $('settings').classList.toggle('open');
   $('calibrateBtn').onclick = () => Joy.calibrate();
+  $('distNearBtn').onclick = () => Joy.calibrateDist('near');
+  $('distFarBtn').onclick = () => Joy.calibrateDist('far');
   [['optSwap', 'swap'], ['optInvX', 'invX'], ['optInvY', 'invY']].forEach(([id, key]) => {
     const el = $(id);
     el.checked = !!Joy.settings[key];
@@ -131,10 +134,25 @@
   }
 
   // «Наклони вперёд и подержи» — чтобы начать без мыши
+  // Для игр с наклоном — «наклони вперёд и подержи»,
+  // для игр с дальномером — «поднеси руку близко и подержи».
+  // Руку нужно сначала убрать: иначе игра перезапускалась бы сама, пока рука рядом.
   const HOLD = 0.7;
+  let distArmed = false;
   function holdForward(dt) {
-    if (Joy.y < -0.5) holdTime += dt; else holdTime = Math.max(0, holdTime - dt * 2);
-    return holdTime >= HOLD;
+    let active;
+    if (def.sensor === 'distance') {
+      if (Joy.dist > 0.6) distArmed = true;
+      active = distArmed && Joy.dist < 0.25;
+    } else {
+      active = Joy.y < -0.5;
+    }
+    if (active) holdTime += dt; else holdTime = Math.max(0, holdTime - dt * 2);
+    if (holdTime >= HOLD) { distArmed = false; return true; }
+    return false;
+  }
+  function startHint() {
+    return def.sensor === 'distance' ? 'Убери руку, потом поднеси близко к дальномеру и подержи' : 'Наклони джойстик вперёд и подержи';
   }
 
   // ── Игровой цикл ──
@@ -142,7 +160,7 @@
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    Joy.update();
+    Joy.update(dt);
 
     // индикатор в настройках
     const dot = $('tiltDot');
@@ -150,6 +168,10 @@
     const h = Joy.hub;
     $('rawText').textContent = h.connected && h.tiltPort !== null
       ? `датчик: X ${h.rawX}, Y ${h.rawY}` : 'датчик: —';
+    $('distFill').style.width = `${Math.round((1 - Joy.dist) * 100)}%`;
+    $('distRaw').textContent = Joy.hasDistanceSensor() && h.rawDist !== null
+      ? `дальномер: ${h.rawDist} (близко ${Joy.settings.distNear}, далеко ${Joy.settings.distFar})`
+      : 'дальномер: без датчика — стрелки ↑ ↓';
 
     if (game) {
       phaseTime += dt;
@@ -172,14 +194,14 @@
         overlay(`${def.emoji} ${def.title}`, [
           def.goal,
           { text: best === null ? '' : '🏆 Рекорд: ' + def.formatScore(best), color: '#FFD700' },
-          { text: 'Наклони джойстик вперёд и подержи, чтобы начать', color: '#fff', size: 20 },
+          { text: startHint() + ', чтобы начать', color: '#fff', size: 20 },
         ], holdTime / HOLD);
         if (holdForward(dt)) { phase = 'play'; phaseTime = 0; holdTime = 0; }
       } else if (phase === 'over') {
         const r = game.result;
         const lines = (r.lines || []).slice();
         if (newRecord) lines.push({ text: '🎉 Новый рекорд!', color: '#FFD700', size: 26 });
-        lines.push({ text: 'Наклони вперёд и подержи — сыграть ещё', color: '#fff', size: 20 });
+        lines.push({ text: startHint() + ' — сыграть ещё', color: '#fff', size: 20 });
         overlay(r.title, lines, phaseTime > 1 ? holdTime / HOLD : 0);
         if (phaseTime > 1 && holdForward(dt)) { restart(); phase = 'play'; }
       }

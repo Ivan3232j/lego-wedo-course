@@ -20,8 +20,10 @@
 
   const Joy = {
     x: 0, y: 0,
-    hub: { connected: false, connecting: false, name: '', tiltPort: null, rawX: 0, rawY: 0 },
-    settings: { swap: false, invX: false, invY: false, offX: 0, offY: 0 },
+    // Дальномер: 0 — рука вплотную, 1 — далеко / ничего нет
+    dist: 1,
+    hub: { connected: false, connecting: false, name: '', tiltPort: null, rawX: 0, rawY: 0, distPort: null, rawDist: null },
+    settings: { swap: false, invX: false, invY: false, offX: 0, offY: 0, distNear: 0, distFar: 10 },
     listeners: [],
     onStatus(fn) { this.listeners.push(fn); },
     _emit() { this.listeners.forEach(fn => { try { fn(this.hub); } catch (e) { console.error(e); } }); },
@@ -98,13 +100,41 @@
   }
 
   // Вызывается игровым циклом каждый кадр
-  Joy.update = function () {
+  // Дальномер без датчика: стрелки ↑/↓ (или экранный стик) двигают «руку» ближе/дальше
+  let manualDist = 1;
+  function distTarget(dt, keyY) {
+    const h = Joy.hub, s = Joy.settings;
+    if (h.connected && h.distPort !== null && h.rawDist !== null) {
+      const span = (s.distFar - s.distNear) || 1;
+      return G_clamp((h.rawDist - s.distNear) / span);
+    }
+    manualDist = G_clamp(manualDist + keyY * 1.3 * dt);
+    return manualDist;
+  }
+  function G_clamp(v) { return Math.max(0, Math.min(1, v)); }
+
+  Joy.hasDistanceSensor = function () {
+    return Joy.hub.connected && Joy.hub.distPort !== null;
+  };
+
+  // Запомнить текущее показание дальномера как «близко» или «далеко»
+  Joy.calibrateDist = function (which) {
+    if (Joy.hub.rawDist === null) return;
+    if (which === 'near') Joy.settings.distNear = Joy.hub.rawDist;
+    else Joy.settings.distFar = Joy.hub.rawDist;
+    saveSettings();
+  };
+
+  Joy.update = function (dt = 1 / 60) {
     let x = 0, y = 0;
     if (keys.has('L')) x -= 1;
     if (keys.has('R')) x += 1;
     if (keys.has('U')) y -= 1;
     if (keys.has('D')) y += 1;
     if (touch.active) { x += touch.x; y += touch.y; }
+    // дальномер: сглаживаем, потому что датчик немного «дрожит»
+    const target = distTarget(dt, Math.max(-1, Math.min(1, y)));
+    Joy.dist += (target - Joy.dist) * (1 - Math.exp(-dt * 12));
     const t = tiltVector();
     x += t.x; y += t.y;
     Joy.x = shape(Math.max(-1, Math.min(1, x)));
@@ -125,6 +155,8 @@
       Joy.hub.connecting = st.connecting;
       Joy.hub.name = st.name || '';
       Joy.hub.tiltPort = st.tilt.port;
+      Joy.hub.distPort = st.distance.port;
+      if (st.distance.port === null) Joy.hub.rawDist = null;
       Joy._emit();
     });
 
@@ -134,6 +166,9 @@
         Joy.hub.rawY = data.y;
         Joy.hub.tiltPort = data.port;
         Joy._emit();
+      } else if (data.type === 'distance' && data.port !== 'sim') {
+        Joy.hub.rawDist = data.raw !== undefined ? data.raw : data.value;
+        Joy.hub.distPort = data.port;
       }
     });
 
@@ -145,9 +180,14 @@
       WeDo.disconnect();
     };
 
+    // Игры вызывают setLed каждый кадр — шлём на хаб только смену цвета
+    let lastLed = -1;
     Joy.setLed = function (color) {
+      if (color === lastLed) return;
+      lastLed = color;
       WeDo.setLed(color);
     };
+    WeDo.onStatus(st => { if (!st.connected) lastLed = -1; });
   }
 
   window.Joy = Joy;

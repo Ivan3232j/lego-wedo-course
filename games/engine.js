@@ -82,6 +82,26 @@
       return w;
     },
 
+    // Шкала дальномера: где сейчас рука (d: 0 — близко, 1 — далеко).
+    // vertical = true — «близко» сверху; иначе «близко» слева.
+    distGauge(ctx, x, y, w, h, d, vertical) {
+      ctx.fillStyle = 'rgba(14,30,56,0.55)';
+      G.rr(ctx, x, y, w, h, 10); ctx.fill();
+      const t = G.clamp(d, 0, 1);
+      ctx.fillStyle = '#FFD700';
+      if (vertical) {
+        const my = y + 22 + t * (h - 44);
+        G.rr(ctx, x + 4, my - 6, w - 8, 12, 6); ctx.fill();
+        G.text(ctx, '✋', x + w / 2, y + 12, { size: 14, align: 'center' });
+        G.text(ctx, '…', x + w / 2, y + h - 12, { size: 16, align: 'center' });
+      } else {
+        const mx = x + 22 + t * (w - 44);
+        G.rr(ctx, mx - 6, y + 4, 12, h - 8, 6); ctx.fill();
+        G.text(ctx, '✋', x + 12, y + h / 2, { size: 14, align: 'center' });
+        G.text(ctx, '…', x + w - 12, y + h / 2, { size: 16, align: 'center' });
+      }
+    },
+
     formatTime(sec) {
       const m = Math.floor(sec / 60), s = sec - m * 60;
       return m > 0 ? `${m}:${s.toFixed(1).padStart(4, '0')}` : `${s.toFixed(1)} с`;
